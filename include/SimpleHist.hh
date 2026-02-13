@@ -300,7 +300,7 @@ inline void output_differential(const SimpleHist & hist0,
           << hist0.binhi(i)  << " "
           << hist0[i] * norm / (hist0.binhi(i) - hist0.binlo(i)) << std::endl;
   }
-  *ostr << "over flow bin " << hist0.overflow() << std::endl;
+  *ostr << "# over flow bin " << hist0.overflow() << std::endl;
 }
 
 /// output the cumulative histogram.

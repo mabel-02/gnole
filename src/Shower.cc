@@ -130,8 +130,10 @@ void Shower::evolve_scale(double t, double tend, bool include_as_constant) {
     int idip = choose_emitter();
     // now set all emission properties
     double lnkt = ln_kt(t);
-    if ((2.0*asmur_*b0*lnkt >= 1.0) or (evl_grid_ and t>=evl_grid_->xlim()) or (lnkt > lnktmax)) {
+    if ((2.0 * asmur_ * b0 * lnkt >= 1.0) or (evl_grid_ and t >= evl_grid_->xlim()) or (lnkt > lnktmax))
+    {
       event_.bad = true; // setting this to avoid starting another evolution later
+      std::cout << "event is bad" << std::endl;
       break;
     }
 
@@ -332,7 +334,7 @@ void Shower::perform_branch_single_insertion(double t_insertion,  int ibranch, c
     // update event weight
     event_.weight *= (ibranch == -2 ? -w : w);
   } else {
-    // Version 2 (slightly more efficient): 
+    // Version 2 Sightly more efficient): 
     // correct directly the LL evolution with a probability weight,
     // and incorporate directly branch0 in the reals (branch -1)
     // this effectively adds a single branch to the existing algorithm
