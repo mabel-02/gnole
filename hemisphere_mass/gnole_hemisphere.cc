@@ -57,6 +57,7 @@ int main(int argc, char **argv)
     set_nll_expanded(nll_expanded);
 
     // check whether the observable should be computed in SL approximation
+    // only appears in the calculation of ET2, has no influence on dSdt
     bool sl_observable = cmdline.present("-sl-obs");
     set_sl_observable(sl_observable);
 
