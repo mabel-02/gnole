@@ -29,6 +29,10 @@ int main(int argc, char **argv)
     header << "# order = " << order << endl;
     double dy = cmdline.value("-drap", 1.0).help("full rapidity width of the slice (centered on y=0)");
     header << "# dy = " << dy << endl;
+    double dyl = cmdline.value("-drapl", 0.5);
+    header << "# dyl = " << dyl << endl;
+    double dyr = cmdline.value("-drapr", 0.5);
+    header << "# dyl = " << dyr << endl;
     double nev = cmdline.value("-nev", 1e6).help("number of events to run");
     header << "# nev_requested = " << nev << endl;
     double xmur = cmdline.value("-xmur", 1.0);
@@ -72,38 +76,20 @@ int main(int argc, char **argv)
 
     Slice slice(dy, p, nbins, obsmax);
     Hemisphere2 hemisphere(dy, p, nbins, obsmax);
+    asymSlice aslice(dyl, dyr, p, nbins, obsmax);
     // output
     string filename = cmdline.value<string>("-out", "output.dat");
 
-
-    Shower shower(hemisphere, xmur, xQ, order, header.str(), seed);
-
+    #ifdef NNET
+        string fn_evl_nn = cmdline.value<string>("-evol", "");
+        Shower shower(hemisphere, xmur, xQ, fn_evl_nn, order, header.str(), seed);
+    #else
+        Shower shower(aslice, xmur, xQ, order, header.str(), seed);
+    #endif
     // this makes sure there are no unused options
     // left and also triggers the code needed to produce
     // the output for -h
     cmdline.assert_all_options_used();
 
     shower.run(nev, filename);
-
-    // eta = 7
-    // phi = 0.6*np.pi
-    // theta = 2 * np.arctan(np.exp(-eta))
-    // px = np.sin(theta) * np.cos(phi)
-    // py = np.sin(theta) * np.sin(phi)
-    // pz = np.cos(theta)
-    // double eta;
-    // std::cout << "eta = ";
-    // std::cin >> eta;
-    // double phi = 0.6 * M_PI;
-    // double theta = 2 * atan(exp(-eta));
-    // double px = sin(theta) * cos(phi);
-    // double py = sin(theta) * sin(phi);
-    // double pz = cos(theta);
-    // double E = sqrt(px * px + py * py + pz * pz);
-    // const Momentum vec = Momentum(px, py, pz, E);
-    // const Momentum thrust_axis = Momentum(0, 0, 1, 1);
-
-    
-
-    //std::cout << slice.in_region(vec, &thrust_axis) << std::endl;
 }

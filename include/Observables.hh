@@ -160,4 +160,33 @@ private:
   double delta_rap_;
 };
 
+class asymSlice : public Observable
+{
+public:
+  /// constructor
+  asymSlice(double delta_rap_left, double delta_rap_right, double p, int nbin = 100, double maxlnkt = lnktmax, double maxt = EVOLCUT)
+      : Observable(p, nbin, maxlnkt, maxt), delta_rap_left_(delta_rap_left), delta_rap_right_(delta_rap_right) {}
+
+  /// description
+  virtual std::string description() const
+  {
+    return "Slice between delta rap left = " + std::to_string(delta_rap_left_) + " and delta rap right = " + std::to_string(delta_rap_right_);
+  }
+
+  /// return true if emission is in the slice
+  virtual bool in_region(const Momentum &emsn, const Momentum *thrust_axis) const
+  {
+    if ((emsn.rap(thrust_axis) < delta_rap_right_) && (emsn.rap(thrust_axis) > -delta_rap_left_))
+      return true;
+    return false;
+  }
+
+  /// return delta rap
+  virtual double parameter() const { return delta_rap_right_; }
+
+private:
+  double delta_rap_left_;
+  double delta_rap_right_;
+};
+
 #endif // __OBSERVABLES_HH__
