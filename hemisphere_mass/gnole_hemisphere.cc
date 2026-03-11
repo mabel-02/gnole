@@ -46,8 +46,7 @@ int main(int argc, char **argv)
     set_lnktmax(cutoff);
 
     // set collinear cutoff
-    double etamax = cmdline.value("-etamax", -
-        -5);
+    double etamax = cmdline.value("-etamax", 5);
     header << "# etamax = " << etamax << endl;
     set_rapmax(etamax);
 
@@ -59,6 +58,8 @@ int main(int argc, char **argv)
     // decide whether to expand NLL corrections
     bool nll_expanded = cmdline.present("-expand-nll");
     set_nll_expanded(nll_expanded);
+    //decide wether to use Dasgupta Salam variant or standart gnole
+    bool DS = cmdline.present("-DS");
 
     // check whether the observable should be computed in SL approximation
     // only appears in the calculation of ET2, has no influence on dSdt
@@ -84,12 +85,38 @@ int main(int argc, char **argv)
         string fn_evl_nn = cmdline.value<string>("-evol", "");
         Shower shower(hemisphere, xmur, xQ, fn_evl_nn, order, header.str(), seed);
     #else
-        Shower shower(aslice, xmur, xQ, order, header.str(), seed);
+        Shower shower(aslice, xmur, xQ, order, DS, header.str(), seed);
     #endif
     // this makes sure there are no unused options
     // left and also triggers the code needed to produce
     // the output for -h
     cmdline.assert_all_options_used();
+/*
+    double lnkt = 1;
+    double eta;
+    std::cin >> eta;
 
+    double phi = 0.6 * M_PI;
+
+    double exp_eta = std::exp(eta);
+    double alpha = std::exp(-lnkt) * exp_eta;
+    double beta = std::exp(-lnkt) / exp_eta;
+    double gluon_px = std::exp(-lnkt) * sin(phi);
+    double gluon_py = std::exp(-lnkt) * cos(phi);
+    double gluon_pz = 0.5 * (alpha - beta);
+    double gluon_E = 0.5 * (alpha + beta);
+
+    double theta = 2 * atan(exp(-eta));
+    double px = sin(theta) * cos(phi);
+    double py = sin(theta) * sin(phi);
+    double pz = cos(theta);
+
+    double e = sqrt(px * px + py * py + pz * pz);
+
+    Momentum vec(px, py, pz, e);
+    Momentum vecGnole(gluon_px, gluon_py, gluon_pz, gluon_E);
+    Momentum thrust_axis(0, 0, -1, 1);
+    std::cout << vec.rap() << std::endl;
+    std::cout << vecGnole.rap() << std::endl;*/
     shower.run(nev, filename);
 }

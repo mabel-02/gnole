@@ -44,6 +44,38 @@ public:
     }
   }
 
+  Shower(Observable &obs,
+         double xmur,
+         double xQ,
+#ifdef NNET
+         std::string fn_evl_nn,
+#endif
+         int order_evl,
+         bool DasguptaSalam,
+         std::string header = "",
+         int seed = 0)
+      : xmur_(xmur), xQ_(xQ), order_evl_(order_evl), obs_(&obs),
+        evl_grid_(0), NLL_evolution_(false), header_(header),
+        rng(seed), gluon_(0, 0, 0, 0), DasguptaSalam_(DasguptaSalam), event_cache_(new Event())
+  {
+    assert((order_evl_ == 0) || (order_evl_ == 1));
+    asmur_ = alphas2(xmur_);
+    // if order = 1, set up the grid for ln kt
+    if (order_evl_ == 1)
+    {
+      std::cerr << "# Initialization of grids" << std::flush;
+#ifdef NNET
+      if (fn_evl_nn != "")
+        evl_grid_ = new EvolGrid(fn_evl_nn);
+      else
+#endif
+        evl_grid_ = new EvolGrid(NEVLGRID, xmur_, xQ_);
+      std::cerr << ": done." << std::endl;
+      // set the integrated coefficient
+      integrated_counterterm_ = integrated_counterterm(obs_->parameter());
+    }
+  }
+
   /// destructor
   virtual ~Shower() {
     if (evl_grid_) delete evl_grid_;
@@ -132,7 +164,9 @@ protected:
   bool lab_ordering_;
   /// flag for kt ordering in the (respective) emitting dipole frame
   bool dip_ordering_;
-  
+  /// flag for activating the DasguptaSalam variant in the evolution
+  bool DasguptaSalam_ = false;
+
   /// cache second insertion info
   double t_second_insertion_; 
   Momentum momentum_cache_;

@@ -5,6 +5,7 @@
 #include "Parameters.hh"
 #include "Momentum.hh"
 #include "SimpleHist.hh"
+#include "Dipole.hh"
 #include <math.h>
                                                                    
 //----------------------------------------------------------------------
@@ -55,6 +56,77 @@ public:
       //  //dSdlambda_. add_entry(-as*Ltilde(sqrt(ET2)), - weight * log(f2/4./pow(sin(emsn.stored_phi_dip()),2)) * 0.5);
       //}
       return true;
+    }
+    return false;
+  }
+
+  bool isBorn(Dipole &mother){
+    if(mother.right().isBorn()){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+
+
+  /// overload for the Dasgupta/Salam variant of the algorithm, this includes the mother-dipole 
+  bool add_entries_in_region(const Momentum &emsn, double t, double lnkt, Dipole &mother, Dipole &born, double rndm, bool &split,
+                             double &weight,
+                             const Momentum *thrust_axis = 0)
+  {
+    if (this->in_region(emsn, thrust_axis))
+    {
+      if(isBorn(mother)){
+        Momentum q(0.0, 0.0, -0.5, 0.5);
+        Momentum qb(0.0, 0.0, 0.5, 0.5);
+        Momentum pl;
+
+        pl = mother.left().momentum();
+        double ab = dot_product(qb, q);
+        double gb = dot_product(emsn, q);
+        double gl = dot_product(emsn, pl);
+        double al = dot_product(qb, pl);
+        double X = 1 - (ab * gl) / (gb * al);
+        if (X > 0)
+        {
+          if(rndm < X){
+          dSdt_.add_entry(t, weight);
+          return true;
+          }
+          else{
+            split = false;
+            return false;
+          }
+        }
+        else{
+          dSdt_.add_entry(t, X * weight);
+          weight *= (1 - X);
+          split = false;
+          return false;
+        }
+      }
+      else{
+        dSdt_.add_entry(t, weight);
+        double ET2;
+        if (SL_OBSERVABLE)
+        {
+          ET2 = exp(-2. * lnkt); // LL approximation for the observable
+        }
+        else
+        {
+          if (thrust_axis)
+          {
+            ET2 = cross(emsn, *thrust_axis, true).E();
+            ET2 *= ET2;
+          }
+          else
+            ET2 = emsn.px() * emsn.px() + emsn.py() * emsn.py();
+        }
+        dSdlnET_.add_entry(-Ltilde(sqrt(ET2)), weight);
+        dSdlambda_.add_entry(-as * Ltilde(sqrt(ET2)), weight);
+        return true;
+      }
     }
     return false;
   }

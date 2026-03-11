@@ -14,7 +14,7 @@ void Shower::run(int nev, const std::string& fn) {
       std::cerr << "# " << i+1 << " out of " << nev << " events." << std::endl;
       if (!fn.empty()) write(i+1, fn);
     }
-    if (order_evl_ == 0) 
+    if (order_evl_ == 0)
       evolve_scale(tstart);
     else if (order_evl_ == 1) {
       if (!NLL_EXPANDED){
@@ -128,6 +128,7 @@ void Shower::evolve_scale(double t, double tend, bool include_as_constant) {
   while ((t += - log(rng.uniform_pos()) / (2.0 * CA * event_.eta_tot)) < tend) {
     // increase by amount chosen with distribution e^(-2*CA*sum_rap)    
     int idip = choose_emitter();
+    bool split = true;
     // now set all emission properties
     double lnkt = ln_kt(t);
     if ((2.0 * asmur_ * b0 * lnkt >= 1.0) or (evl_grid_ and t >= evl_grid_->xlim()) or (lnkt > lnktmax))
@@ -143,15 +144,32 @@ void Shower::evolve_scale(double t, double tend, bool include_as_constant) {
 
     Momentum emsn = event_[idip].radiate(lnkt - log(xQ_), rng.uniform_pos(),
 					 rng.uniform_pos());
-    if (!do_split(idip, emsn)) continue;
+    //if (!do_split(idip, emsn)) continue;
 
     tlast_ = t;
     // if emission is in observed region, add to histogram and stop the evolution
     double C1 = ((include_as_constant and NLL_evolution_) ?  1.0 + asmur_/(2.0*M_PI) * (CF*integrated_counterterm_ + H1) : 1.0);
-    if (obs_->add_entries_in_region(emsn.stored_E()*emsn, t, lnkt-log(xQ_),
-	  		    C1 * event_.weight, &event_.axis())) {
-      event_.bad = true; // setting this to avoid starting another evolution later
-      break;
+    event_.weight *= C1;
+    if (DasguptaSalam_)
+    {
+      if (obs_->add_entries_in_region(emsn.stored_E() * emsn, t, lnkt - log(xQ_), event_[idip], event_[0], rng.uniform_pos(), split,
+                                      event_.weight, &event_.axis()))
+      {
+        event_.bad = true; // setting this to avoid starting another evolution later
+        break;
+      }
+    }
+    else
+    {
+      if (obs_->add_entries_in_region(emsn.stored_E() * emsn, t, lnkt - log(xQ_),
+                                      event_.weight, &event_.axis()))
+      {
+        event_.bad = true; // setting this to avoid starting another evolution later
+        break;
+      }
+    }
+    if(split){
+      do_split(idip, emsn);
     }
   }
   return;
