@@ -84,7 +84,7 @@ int main(int argc, char **argv)
         string fn_evl_nn = cmdline.value<string>("-evol", "");
         Shower shower(hemisphere, xmur, xQ, fn_evl_nn, order, header.str(), seed);
     #else
-        Shower shower(aslice, xmur, xQ, order, header.str(), seed);
+        Shower shower(slice, xmur, xQ, order, header.str(), seed);
     #endif
     // this makes sure there are no unused options
     // left and also triggers the code needed to produce
