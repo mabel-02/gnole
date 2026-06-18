@@ -74,9 +74,14 @@ int main(int argc, char **argv)
     double obsmax = cmdline.value("-obsmax", cutoff);
     header << "# obsmax = " << obsmax << endl;
 
+    double R = 0.4; //jet radius
+    double eta = 0.0; //jet rapidity
+    double phi = 0.0 * M_PI; //jet azimuth
+
     Slice slice(dy, p, nbins, obsmax);
     Hemisphere2 hemisphere(dy, p, nbins, obsmax);
     asymSlice aslice(dyl, dyr, p, nbins, obsmax);
+    Jet jet(R, eta, phi, p, nbins, obsmax);
     // output
     string filename = cmdline.value<string>("-out", "output.dat");
 
@@ -84,7 +89,7 @@ int main(int argc, char **argv)
         string fn_evl_nn = cmdline.value<string>("-evol", "");
         Shower shower(hemisphere, xmur, xQ, fn_evl_nn, order, header.str(), seed);
     #else
-        Shower shower(slice, xmur, xQ, order, header.str(), seed);
+        Shower shower(jet, xmur, xQ, order, header.str(), seed);
     #endif
     // this makes sure there are no unused options
     // left and also triggers the code needed to produce

@@ -6,7 +6,12 @@
 #include "Momentum.hh"
 #include "SimpleHist.hh"
 #include <math.h>
-                                                                   
+
+inline double angular_distance(double gluon_phi, double phi_)
+{
+  return std::min(std::abs(gluon_phi - phi_), std::abs(gluon_phi - phi_ - 2.0 * M_PI));
+};
+
 //----------------------------------------------------------------------
 /// \class Observable
 /// abstract observable base class
@@ -189,4 +194,36 @@ private:
   double delta_rap_right_;
 };
 
+class Jet : public Observable
+{
+public:
+  /// constructor
+  Jet(double R, double eta, double phi, double p, int nbin = 100, double maxlnkt = lnktmax, double maxt = EVOLCUT)
+      : Observable(p, nbin, maxlnkt, maxt), R_(R), eta_(eta), phi_(phi) {}
+
+  /// description
+  virtual std::string description() const
+  {
+    return "Jet with R = " + std::to_string(R_) + " at eta = " + std::to_string(eta_) + "and phi = " + std::to_string(phi_);
+  }
+
+
+  /// return true if emission is in the slice
+  virtual bool in_region(const Momentum &emsn, const Momentum *thrust_axis) const
+  {
+    if (((emsn.rap(thrust_axis) - eta_) * (emsn.rap(thrust_axis) - eta_) + angular_distance(emsn.phi(), phi_)* angular_distance(emsn.phi(), phi_)) < R_*R_ )
+    {
+      return true;
+    }
+    return false;
+  }
+
+  /// return delta rap
+  virtual double parameter() const { return R_; }
+
+private:
+  double R_;
+  double eta_;
+  double phi_;
+};
 #endif // __OBSERVABLES_HH__
